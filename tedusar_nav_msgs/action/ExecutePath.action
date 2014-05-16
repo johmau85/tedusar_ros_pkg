@@ -1,0 +1,8 @@
+# Define the goal
+nav_msgs/Path path
+---
+# Define the result
+uint32 result
+---
+# Define a feedback message
+uint32 feedback

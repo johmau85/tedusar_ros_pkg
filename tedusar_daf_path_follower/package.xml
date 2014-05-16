@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package>
+  <name>tedusar_daf_path_follower</name>
+  <version>0.1.0</version>
+  <description>The tedusar_path_follower package</description>
+  <maintainer email="peter.lepej@um.si">Peter Lepej</maintainer>
+  <license>BSD</license>
+
+  <url type="website">http://wiki.ros.org/tedusar_daf_path_follower</url>
+
+  <author email="peter.lepej@um.si">Peter Lepej</author>
+  <author email="johannes.maurer@ist.tugraz.at">Johannes Maurer</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>actionlib</build_depend>
+  <build_depend>costmap_2d</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>tedusar_nav_msgs</build_depend>
+  <build_depend>tf</build_depend>
+
+  <run_depend>actionlib</run_depend>
+  <run_depend>costmap_2d</run_depend>
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>tedusar_nav_msgs</run_depend>
+  <run_depend>tf</run_depend>
+
+  <export>
+
+  </export>
+</package>
