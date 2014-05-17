@@ -1,49 +1,62 @@
-/** \brief
- * Node for 3d search from the kinect where the hedadlles rgbdslam is used and the services to get 3d points
- * the node search for victims in the 3d point clouds that are received from the rgbdslam node
+/*********************************************************************
  *
- *  \file tedusar_path_follower.cpp
- *  \author Peter Lepej
- *  \date 12.12.2012
- *  \version 1.0
- */
+ *  Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2014, Peter Lepej,
+ *                      Faculty of Electrical Engineerign anc Computer Scienece,
+ *                      University of Maribor
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of Graz University of Technology nor the names of
+ *     its contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *
+ *********************************************************************/
 
 #ifndef tedusar_path_follower_hpp___
-#define tedusar_path_follower_hpp___ //header is included only once
+#define tedusar_path_follower_hpp___
 
 #include <ros/ros.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
-#include <tf/transform_datatypes.h>
-#include <ros/callback_queue.h>
-#include <stdio.h>
-#include <math.h>
-#include <algorithm>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <tf/transform_listener.h>
-#include <visualization_msgs/Marker.h>
 #include <sensor_msgs/Imu.h>
 
+#include <tf/transform_listener.h>
+#include <visualization_msgs/Marker.h>
 #include <tedusar_nav_msgs/ExecutePathAction.h>
 #include <actionlib/server/simple_action_server.h>
-#include <base_local_planner/costmap_model.h>
 
-#include <tf/transform_datatypes.h>
-#include <geometry_msgs/PoseArray.h>
-#include <costmap_2d/costmap_2d_ros.h>
-#include <costmap_2d/costmap_2d.h>
-#include <cmath>
+#define PI 3.14159265
 
 using namespace tedusar_nav_msgs;
 using namespace std;
 typedef actionlib::SimpleActionServer<ExecutePathAction> ExecutePathActionServer;
 
-#define PI 3.14159265
-
-
-namespace tedusar_path_follower  //split up code more classes whit the same name
+namespace tedusar_path_follower
 {
     class tedusar_path_follower
     {
@@ -52,9 +65,6 @@ namespace tedusar_path_follower  //split up code more classes whit the same name
         /** \brief Copyconstruction is not allowed.
          */
         tedusar_path_follower(const tedusar_path_follower &src);
-
-        //costmap_2d::Costmap2DROS* costmap_2d_ros_;
-        //base_local_planner::CostmapModel* costmap_model_;
 
         protected:
         ros::NodeHandle nh_;
@@ -76,11 +86,13 @@ namespace tedusar_path_follower  //split up code more classes whit the same name
         std::string imu_topic;
         nav_msgs::Odometry odom;
         geometry_msgs::Twist cmd;
+
         //for visualization
         nav_msgs::Path curr_path;
         nav_msgs::Path calc_path;
         nav_msgs::Path local_calc_path;
 
+	//actions
         ExecutePathResult action_result;
         ExecutePathFeedback feedback;
 
@@ -120,6 +132,7 @@ namespace tedusar_path_follower  //split up code more classes whit the same name
         double rot_correction_factor;
         double imu_roll, imu_pitch, imu_yaw;
         double lower_al_angle, upper_al_angle;
+	double stability_angle;
 
         int co_unchanged, co_points;
         int psize, st_point, path_po_lenght;
@@ -145,11 +158,10 @@ namespace tedusar_path_follower  //split up code more classes whit the same name
 
         //initialization function
         void init();
-        //data calback functions
+        //geometry calculation calback functions
         void path_cb(const nav_msgs::Path::ConstPtr&  path);
         void pose_update(const nav_msgs::Odometry pose);
         void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg);
-        //circle fiting calculation functions
         void calculate_cmd();
         void calc_local_path();
         void calculate_al_rot();
@@ -159,8 +171,7 @@ namespace tedusar_path_follower  //split up code more classes whit the same name
         void calc_ground_compensation();
         //action server
         void executePathCB(const ExecutePathGoalConstPtr &goal);
-        //colision checker
-        void checkForColision();
+	void check_robot_stability();
     };
 }
 

@@ -1,44 +1,67 @@
-/** \brief
+/*********************************************************************
  *
- *  \file tedusar_path_follower.cpp
- *  \author Peter Lepej
- *  \date 12.12.2013
- *  \version 1.0
- */
+ *  Software License Agreement (BSD License)
+ *
+ *  Copyright (c) 2014, Peter Lepej,
+ *                      Faculty of Electrical Engineerign anc Computer Scienece,
+ *                      University of Maribor
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of Graz University of Technology nor the names of
+ *     its contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ *
+ *********************************************************************/
 
 #include <tedusar_daf_path_follower/tedusar_daf_path_follower.hpp>
 
 namespace tedusar_path_follower
 {
-    /****************************************************************
-     * Here we can set up the parameters
-     */
-    tedusar_path_follower::tedusar_path_follower(ros::NodeHandle nh)    //constructor for the class
+    tedusar_path_follower::tedusar_path_follower(ros::NodeHandle nh) 
     : nh_(nh),
-      execute_path_action_server_(nh_, "execute_path", boost::bind(&tedusar_path_follower::executePathCB, this, _1), false)//,
-      //listener(),
-      //costmap_2d_ros_(NULL)
+      execute_path_action_server_(nh_, "execute_path", boost::bind(&tedusar_path_follower::executePathCB, this, _1), false)
     {
-
-        //costmap_2d_ros_ = new costmap_2d::Costmap2DROS("global_costmap", listener);
 
         ros::NodeHandle private_nh("~");
 
         private_nh.param<double>("pub_cmd_hz", pub_cmd_hz, 10);
         private_nh.param<std::string>("path_topic", path_topic, string("/exploration_path"));
-        private_nh.param<std::string>("sub_pose_update_topic", pose_update_topic, string("/odom"));
+        private_nh.param<std::string>("pose_update_topic", pose_update_topic, string("/odom"));
         private_nh.param<std::string>("imu_data", imu_topic, string("/imu_data"));
         private_nh.param<std::string>("out_cmd_vel", cmd_vel_out, string("/cmd_vel"));
         private_nh.param<std::string>("map_link", map_link, string("/map"));
         private_nh.param<std::string>("base_link", base_link, string("/base_footprint"));
-        private_nh.param<double>("max_lin_speed", max_lin_speed, 0.3);
-        private_nh.param<double>("min_lin_speed", min_lin_speed, 0.1);
-        private_nh.param<double>("max_rot_speed", max_rot_speed, 0.5);
-        private_nh.param<double>("min_rot_speed", min_rot_speed, 0.1);
+        private_nh.param<double>("max_lin_vel", max_lin_speed, 0.4);
+        private_nh.param<double>("min_lin_vel", min_lin_speed, 0.1);
+        private_nh.param<double>("max_rot_vel", max_rot_speed, 0.8);
+        private_nh.param<double>("min_rot_vel", min_rot_speed, 0.4);
         private_nh.param<double>("rot_correction_factor", rot_correction_factor, 1);
-        private_nh.param<double>("execution_period", execution_period, 1.0); //0.0 execute at pose update -- is smaller have to decrease local tolerance
+        private_nh.param<double>("execution_period", execution_period, 1.0); 
         private_nh.param<double>("update_skip_until_vel_increase", update_skip, 5);
-        private_nh.param<double>("global_goal_tolerance", global_goal_tolerance, 0.1);
+        private_nh.param<double>("global_goal_tolerance", global_goal_tolerance, 0.2);
         private_nh.param<double>("lower_al_angle", lower_al_angle, 0.2);              //this angle determine when angle correction is executed
         private_nh.param<double>("upper_al_angle", upper_al_angle, 0.6);              //this angle determine middle robot correction wich is compensate in linear movment
                                                                                       //smaller correction angle means better fiting of trajectories
@@ -46,16 +69,13 @@ namespace tedusar_path_follower
         private_nh.param<bool>("enable_ground_compensation", enable_ground_compensation, true);
         private_nh.param<bool>("enable_velocity_encrease", enable_velocity_encrease, true);
         private_nh.param<bool>("show_trajectory_planing", show_trajectory_planing, true);
+	private_nh.param<double>("stability_angle", stability_angle, 1.0);
     }
     /****************************************************************
      *
      */
     tedusar_path_follower::~tedusar_path_follower()
     {
-//        if(costmap_2d_ros_)
-//        {
-//            delete costmap_2d_ros_;
-//        }
     }
     /*****************************************************************************************************************
      * Initialization
@@ -78,7 +98,7 @@ namespace tedusar_path_follower
         //reset initial settings
         resetPathFollowing();
 
-        // start  action server
+        //start  action server
         execute_path_action_server_.start();
     }
     /*****************************************************************************************************************
@@ -154,69 +174,6 @@ namespace tedusar_path_follower
                 ROS_WARN("There is no transfrmationa avaliable from %s to %s", map_link.c_str(), base_link.c_str());
             }
         }
-    }
-    /*****************************************************************************************************************
-     * Check for colision
-     */
-    void tedusar_path_follower::checkForColision()
-    {
-
-        /*
-        //map
-
-        //robot pose
-        tf::Stamped<tf::Pose> robot_pose_tf;
-        costmap_2d_ros_->getRobotPose(robot_pose_tf);
-        geometry_msgs::PoseStamped start_pose;
-        tf::poseStampedTFToMsg(robot_pose_tf, start_pose);
-        ROS_INFO("Robot start pose tf: %f %f", start_pose.pose.position.x, start_pose.pose.position.y);
-
-        //robot footprint
-        costmap_2d::Costmap2D costmap;
-        costmap_2d_ros_->getCostmapCopy(costmap);
-
-        costmap_model_ = new base_local_planner::CostmapModel(costmap);
-
-        std::vector<geometry_msgs::Point> oriented_footprint;
-
-
-        tf::Point position_to_object(0.5, 0.5, 0); //robot position
-
-        tf::Quaternion orientation_to_object = tf::createQuaternionFromYaw(
-                                atan2(-0.5, -0.5));
-
-        tf::Pose pose_candidate;
-
-        pose_candidate.setRotation(orientation_to_object);
-        pose_candidate.setOrigin(position_to_object);
-
-        tf::StampedTransform transform_cost;
-
-        ///????????????????????????????????????
-        listener.lookupTransform(map_link, base_link, ros::Time(0),
-                                                transform_cost);
-
-        //transform pose candidate to map frame
-        pose_candidate = transform_cost.inverseTimes(pose_candidate);
-
-
-        double x = pose_candidate.getOrigin()[0];
-        double y = pose_candidate.getOrigin()[1];
-        double yaw = tf::getYaw(pose_candidate.getRotation());
-
-        costmap_2d_ros_.getOrientedFootprint(x, y, yaw, oriented_footprint);
-        geometry_msgs::Point point_msg_in_map;
-        tf::pointTFToMsg(pose_candidate.getOrigin(), point_msg_in_map);
-
-        double cost = costmap_model_->footprintCost(point_msg_in_map, oriented_footprint, costmap_2d_ros_.getInscribedRadius(),costmap_2d_ros_.getCircumscribedRadius());
-
-
-
-        //check for colision
-
-        //make action
-        */
-
     }
     /*****************************************************************************************************************
      * Path Callback From Topic
@@ -543,6 +500,20 @@ namespace tedusar_path_follower
         }
     }
     /*****************************************************************************************************************
+     * Check robot current stability
+     */
+    void tedusar_path_follower::check_robot_stability()
+    {
+	//if robot reaches treshodl of its stability angle it responds with error
+        if((imu_roll > stability_angle)||(imu_pitch > stability_angle))
+        {
+		action_result.result = 1;
+		execute_path_action_server_.setAborted(action_result, std::string("Robot has exceeded angle of stability!"));
+		resetPathFollowing();
+		ROS_WARN("Robot has exceeded angle of stability!");
+        }
+    }
+    /*****************************************************************************************************************
      * calculate Current Alignment Rotation
      */
     void tedusar_path_follower::calculate_al_rot()
@@ -604,7 +575,6 @@ namespace tedusar_path_follower
             execute_path_action_server_.setAborted(action_result, std::string("Path size is 0"));
         }
     }
-
     /*****************************************************************************************************************
      * Compensate Current Angle Difreence
      */
@@ -634,6 +604,8 @@ namespace tedusar_path_follower
         }else
         {
             rot_vel = rot_vel_dir * lin_vel/rad*rot_correction_factor;
+	   //upper and lower angle treshods are same
+           lower_al_angle = upper_al_angle;
         }
     }
     /*****************************************************************************************************************
@@ -695,6 +667,9 @@ namespace tedusar_path_follower
     {
         if(move_robot == true)
         {
+	    //check if robot has reached a treshod for inclination
+	    check_robot_stability();
+
             ROS_INFO_ONCE("Start calculating cmd velocity!");
             //do algnment if angle is too large do alignment
             al_an_diff = alignment_angle - yaw;

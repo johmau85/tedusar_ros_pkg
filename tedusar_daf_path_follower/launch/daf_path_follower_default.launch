@@ -6,46 +6,44 @@
     <arg name="velocity_increase" default="false"/>
     <arg name="angle_compensation" default="true"/>
     <arg name="goal_tolerance" default="0.1"/>
-    <arg name="max_lin_speed" default="0.4"/>
-    <arg name="min_lin_speed" default="0.1"/>
-    <arg name="max_rot_speed" default="0.8"/>
-    <arg name="min_rot_speed" default="0.4"/>
+    <arg name="max_lin_vel" default="0.4"/>
+    <arg name="min_lin_vel" default="0.1"/>
+    <arg name="max_rot_vel" default="0.8"/>
+    <arg name="min_rot_vel" default="0.4"/>
     <arg name="lower_al_angle" default="0.2"/>
-    <arg name="upper_al_angle" default="0.6"/>
+    <arg name="upper_al_angle" default="1.0"/>
 
     <!-- tedusar path follower node -->
     <node pkg="tedusar_path_follower" type="tedusar_path_follower" name="tedusar_path_follower" respawn="true" output="screen">
         <param name="pub_cmd_hz" type="double" value="10" />
-        <param name="sub_pose_update_topic" type="string" value="/odom" />
+        <param name="pose_update_topic" type="string" value="/odom" />
         <param name="imu_data" type="string" value="/imu_data" />
         <param name="path_topic" type="string" value="/exploration_path" />
         <param name="out_cmd_vel" type="string" value="/cmd_vel" />
         <param name="map_link" value="$(arg map_link)" />
         <param name="base_link" value="$(arg base_link)" />
 
-        <param name="max_lin_speed" type="double" value="$(arg max_lin_speed)" />
-        <param name="min_lin_speed" type="double" value="$(arg min_lin_speed)" />
-        <param name="max_rot_speed" type="double" value="$(arg max_rot_speed)" />
-        <param name="min_rot_speed" type="double" value="$(arg min_rot_speed)" />
+        <param name="max_lin_vel" type="double" value="$(arg max_lin_vel)" />
+        <param name="min_lin_vel" type="double" value="$(arg min_lin_vel)" />
+        <param name="max_rot_vel" type="double" value="$(arg max_rot_vel)" />
+        <param name="min_rot_vel" type="double" value="$(arg min_rot_vel)" />
 
         <param name="rot_correction_factor" type="double" value="1.0" />
 
         <param name="execution_period" type="double" value="1.0" />
         <param name="update_skip_until_vel_increase" type="double" value="5" />
-        <param name="global_goal_tolerance" type="double" value="0.1" />
+        <param name="global_goal_tolerance" type="double" value="0.2" />
 
         <param name="enable_angle_compensation" type="bool" value="$(arg angle_compensation)" />   
 
-        <!-- !NOTE: If enable_angle_compensation is false, the lower and upper_al_angle must be the same! -->
+        <!-- !NOTE: If enable_angle_compensation is false, the lower and upper_al_angle are same! -->
         <param name="lower_al_angle" type="double" value="$(arg lower_al_angle)" />		
-        <!-- 0.087 this angle determine when angle correction is executed, smaller correction angle means better fiting of trajectories -->
         <param name="upper_al_angle" type="double" value="$(arg upper_al_angle)" />	
-        <!-- 0.06 this angle determine space in which robot align itself while moving -->
 
         <param name="enable_velocity_encrease" type="bool" value="$(arg velocity_increase)" />
-
         <param name="show_trajectory_planing" type="bool" value="false" />
 
+	<param name="stability_angle" type="double" value="1.0" />
     </node>
 
 </launch>

@@ -4,7 +4,6 @@ project(tedusar_daf_path_follower)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   actionlib
-  costmap_2d
   nav_msgs
   roscpp
   tedusar_nav_msgs
@@ -17,7 +16,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-  CATKIN_DEPENDS actionlib costmap_2d nav_msgs roscpp tedusar_nav_msgs tf
+  CATKIN_DEPENDS actionlib nav_msgs roscpp tedusar_nav_msgs tf
 )
 
 ###########

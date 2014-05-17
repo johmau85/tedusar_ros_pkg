@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
   <name>tedusar_daf_path_follower</name>
-  <version>0.1.0</version>
-  <description>The tedusar_path_follower package</description>
+  <version>0.1.1</version>
+  <description>The DAF Path Follower provide control commands (linear and rotational velocity) based on given path designated to follow. Basic idea of DAF Path Follower is to follow localy defined short path by lookahead distance parameter. Local path need to have more than one point defiend to succesfull applay DAF Path Following. The DAF Path Follower uses geometrical properties to fit a basic shape of a circel to a given local path.</description>
   <maintainer email="peter.lepej@um.si">Peter Lepej</maintainer>
   <license>BSD</license>
 
@@ -14,14 +14,12 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>actionlib</build_depend>
-  <build_depend>costmap_2d</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>tedusar_nav_msgs</build_depend>
   <build_depend>tf</build_depend>
 
   <run_depend>actionlib</run_depend>
-  <run_depend>costmap_2d</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>tedusar_nav_msgs</run_depend>
